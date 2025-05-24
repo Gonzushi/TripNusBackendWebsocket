@@ -1,0 +1,30 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Extract short commit SHA
+        id: vars
+        run: echo "SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        run: |
+          docker build -t hendrywidyanto/tripnus-backend-websocket:latest -t hendrywidyanto/tripnus-backend-websocket:${{ env.SHORT_SHA }} -f Dockerfile.prod .
+
+      - name: Push Docker image
+        run: |
+          docker push hendrywidyanto/tripnus-backend-websocket:latest
+          docker push hendrywidyanto/tripnus-backend-websocket:${{ env.SHORT_SHA }}

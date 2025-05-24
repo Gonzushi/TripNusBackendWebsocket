@@ -1,0 +1,15 @@
+# Files to ignore
+.git
+.gitignore
+Dockerfile*
+npm-debug.log*
+.DS_Store
+.env
+.vscode
+.idea
+*.tsbuildinfo
+/zTripNusBackendWebsocket.zip
+
+# Folders to ignore
+node_modules
+dist

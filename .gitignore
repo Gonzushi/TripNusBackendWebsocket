@@ -1,0 +1,9 @@
+# Files
+.DS_Store
+.env
+/zTripNusBackendWebsocket.zip
+
+
+# Folders
+node_modules/
+dist/

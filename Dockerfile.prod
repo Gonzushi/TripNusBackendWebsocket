@@ -1,0 +1,29 @@
+# -------- Build Stage --------
+FROM node:22-slim AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+# -------- Production Stage --------
+FROM node:22-slim
+
+WORKDIR /app
+
+# Only copy built code and production dependencies
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+RUN npm install --only=production
+
+# PM2 (if needed for production)
+RUN npm install -g pm2
+
+EXPOSE 3000
+
+ENV NODE_ENV=production
+
+CMD ["pm2-runtime", "start", "dist/server.js", "--name", "TripNusBackendWebsocket", "-i", "max"]
