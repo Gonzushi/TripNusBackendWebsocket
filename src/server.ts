@@ -19,8 +19,6 @@ import healthRoutes from "./routes/healthRoutes";
 import registerSocketHandlers from "./sockets";
 
 // Initialize services
-console.log(redisConfig);
-
 const redis = new Redis(redisConfig);
 
 redis.on("error", (err) => {
