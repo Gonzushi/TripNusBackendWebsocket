@@ -1,10 +1,8 @@
-import express from "express";
-import Redis from "ioredis";
-
 import * as path from "path";
 import * as fs from "fs";
 import os from "os";
-import redisConfig from "../config/redisConfig";
+import express from "express";
+import Redis from "ioredis";
 
 // Load package.json once
 const packageJsonPath = path.resolve(__dirname, "../../package.json");

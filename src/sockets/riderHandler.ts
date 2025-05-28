@@ -1,7 +1,12 @@
 import { Socket } from "socket.io";
 import Redis from "ioredis";
 
-export default function handleRiderEvents(socket: Socket, redis: Redis) {
+export default function handleRiderEvents(
+  socket: Socket,
+  redis: Redis,
+  key: string,
+  ttl: number
+) {
   // On driver authentication
   socket.on("driver:register", async (data) => {
     const { driverId, location } = data;
@@ -23,5 +28,4 @@ export default function handleRiderEvents(socket: Socket, redis: Redis) {
     console.log(`✅ Driver ${data.driverId} accepted ride ${data.rideId}`);
     // Forward to REST API or emit to user here...
   });
-
 }

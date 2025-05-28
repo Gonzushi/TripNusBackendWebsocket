@@ -3,15 +3,25 @@ import Redis from "ioredis";
 import handleDriverEvents from "./driverHandler";
 import handleRiderEvents from "./riderHandler";
 
+const TTL_SECONDS = 60; // 1 minutes
+
 export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   socket.on("register", async ({ role, id }) => {
+    if (!role || !id) {
+      console.log("Invalid registration payload");
+      socket.disconnect();
+      return;
+    }
+
     socket.data.role = role;
     socket.data.id = id;
 
+    const key = `${role === "driver" ? "driver" : "rider"}:${id}`;
+
     if (role === "driver") {
-      handleDriverEvents(socket, redis);
+      handleDriverEvents(socket, redis, key, TTL_SECONDS);
     } else if (role === "user") {
-      handleRiderEvents(socket, redis);
+      handleRiderEvents(socket, redis, key, TTL_SECONDS);
     } else {
       console.log("Need to disconnect");
       socket.disconnect();
@@ -19,17 +29,21 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   });
 
   socket.on("disconnect", async () => {
-    const role = socket.data.role;
-    const id = socket.data.id;
+    const { role, id } = socket.data;
+    if (!role || !id) return;
 
-    if (role === "driver" && id) {
-      const keys = await redis.keys(`driver:${id}:*`);
-      if (keys.length > 0) await redis.del(...keys);
-      console.log(`❌ Cleaned up driver ${id}`);
-    } else if (role === "user" && id) {
-      const keys = await redis.keys(`rider:${id}:*`);
-      if (keys.length > 0) await redis.del(...keys);
-      console.log(`❌ Cleaned up rider ${id}`);
+    const key = `${role === "driver" ? "driver" : "rider"}:${id}`;
+
+    try {
+      await redis.del(key);
+
+      if (role === "driver") {
+        await redis.zrem("drivers:locations", id);
+      }
+    } catch (error) {
+      console.error(`Error during disconnect cleanup for ${key}:`, error);
     }
+
+    console.log(`❌ Cleaned up ${role} ${id}`);
   });
 }

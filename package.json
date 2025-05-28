@@ -11,7 +11,6 @@
     "build": "npm run clean && tsc",
     "start": "pm2 start dist/server.js --name TripNusBackendWebsocket -i max || pm2 reload TripNusBackendWebsocket",
     "stop": "pm2 stop TripNusBackendWebsocket",
-
     "docker-build": "docker build -t tripnus-backend-websocket -f Dockerfile.prod .",
     "docker-start": "docker run -p 3001:3001 --env-file .env tripnus-backend-websocket",
     "docker-stop": "docker ps -q --filter ancestor=tripnus-backend-websocket | xargs -r docker stop",
@@ -21,7 +20,6 @@
     "docker-logs": "docker logs tripnus-backend-websocket",
     "docker-tag": "docker tag tripnus-backend-websocket:latest hendrywidyanto/tripnus-backend-websocket:latest",
     "docker-push": "docker push hendrywidyanto/tripnus-backend-websocket:latest",
-
     "redis": "env-cmd -f .env sh -c 'redis-cli -u redis://default:$REDIS_PASSWORD@$REDIS_HOST:$REDIS_PORT'",
     "hash-password": "ts-node src/scripts/hashPasswordCli.ts",
     "zip": "zip -r zTripNusBackendWebscoket.zip . -x 'node_modules/**' -x 'dist/**'"
@@ -36,10 +34,12 @@
   "description": "",
   "dependencies": {
     "@socket.io/admin-ui": "^0.5.1",
+    "@socket.io/redis-adapter": "^8.3.0",
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "ioredis": "^5.6.1",
+    "redis": "^5.1.1",
     "save": "^2.9.0",
     "socket.io": "^4.8.1"
   },
