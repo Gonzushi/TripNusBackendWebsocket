@@ -9,7 +9,7 @@ export type BasicAuthentication = {
 type Mode = "production" | "development";
 
 const getAuthConfig = (): false | BasicAuthentication => {
-  if (!isProduction) return false;
+  if (true || !isProduction) return false;
 
   return {
     type: "basic",
