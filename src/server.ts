@@ -13,13 +13,13 @@ import { setupRedisSubscriber } from "./subscribers/index";
 
 import { socketConfig } from "./config/socketConfig";
 import { adminUiConfig } from "./config/adminUiConfig";
-import redisConfig from "./config/redisConfig";
+import redisConfig, { redisAdapterConfig } from "./config/redisConfig";
 
 import healthRoutes from "./routes/healthRoutes";
 import registerSocketHandlers from "./sockets";
 
 async function createRedisAdapterClients() {
-  const pubClient = createClient({ url: process.env.REDIS_URL });
+  const pubClient = createClient(redisAdapterConfig);
   const subClient = pubClient.duplicate();
   await Promise.all([pubClient.connect(), subClient.connect()]);
   return { pubClient, subClient };
@@ -37,8 +37,11 @@ async function main() {
   const redis = new Redis(redisConfig);
   redis.on("error", (err) => console.error("Redis error:", err));
 
+  console.log("Before");
+
   // Create Redis clients for Socket.IO adapter
   const { pubClient, subClient } = await createRedisAdapterClients();
+  console.log("After");
 
   // Register Redis adapter with Socket.IO
   io.adapter(createAdapter(pubClient, subClient));
