@@ -64,7 +64,6 @@ async function main() {
     console.log(`
 🚀 Server is running on port ${PORT}
 🔌 Socket.IO:       http://localhost:${PORT}
-💓 Health check:    http://localhost:${PORT}/health
 🛠️  Admin UI:        https://admin.socket.io/
     `);
   });

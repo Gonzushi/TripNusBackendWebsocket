@@ -11,7 +11,7 @@ const packageData = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
 export default function healthRoutes(redis: Redis) {
   const router = express.Router();
 
-  router.get("/health", async (req, res): Promise<void> => {
+  router.get("/", async (req, res): Promise<void> => {
     // Check Redis health
     let redisStatus = "unknown";
     try {
@@ -105,6 +105,7 @@ export default function healthRoutes(redis: Redis) {
     const prettyJson = JSON.stringify(response, null, 2);
 
     res.setHeader("Content-Type", "application/json");
+    res.status(200);
     res.send(prettyJson);
   });
 
