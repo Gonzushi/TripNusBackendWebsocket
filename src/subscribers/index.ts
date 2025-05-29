@@ -24,7 +24,7 @@ export function setupRedisSubscriber(io: Server, redis: Redis) {
         return;
       }
 
-      const socket = io.of("/").sockets.get(socketId);
+      const socket = await io.of("/").sockets.get(socketId);
       if (socket) {
         socket.emit("message", parsed);
         console.log(
