@@ -28,3 +28,8 @@ jobs:
         run: |
           docker push hendrywidyanto/tripnus-backend-websocket:latest
           docker push hendrywidyanto/tripnus-backend-websocket:${{ env.SHORT_SHA }}
+          
+      - name: Trigger Coolify Deploy
+        run: |
+          curl -X POST "${{ secrets.COOLIFY_DEPLOY_HOOK }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
