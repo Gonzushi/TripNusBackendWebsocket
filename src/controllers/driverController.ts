@@ -4,7 +4,7 @@ import { z } from "zod";
 
 // Schema for driver data validation matching frontend types
 const driverDataSchema = z.object({
-  socketId: z.string(),
+  socketId: z.string().optional(),
   role: z.literal("driver"),
   id: z.string(),
   location: z.object({
