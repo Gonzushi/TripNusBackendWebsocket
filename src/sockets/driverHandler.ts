@@ -3,7 +3,6 @@ import Redis from "ioredis";
 
 const allowedEvents = new Set([
   "register",
-  "driver:register",
   "driver:updateLocation",
 ]);
 
@@ -15,7 +14,7 @@ export default function handleDriverEvents(
 ) {
   const driverId = socket.data.id;
 
-  socket.on("driver:register", async (data) => {
+  socket.on("driver:updateLocation", async (data) => {
     const { location, ...dataWithoutLocation } = data;
 
     await redis.hset(key, "socketId", socket.id);
@@ -32,21 +31,6 @@ export default function handleDriverEvents(
     );
 
     socket.emit("message", { msg: "Driver registered successfully!" });
-  });
-
-  socket.on("driver:updateLocation", async (data) => {
-    const { location } = data;
-
-    // Update geo location
-    await redis.geoadd(
-      "drivers:locations",
-      location.lng,
-      location.lat,
-      driverId
-    );
-
-    // Refresh TTL on driver metadata hash
-    await redis.expire(key, ttl);
   });
 
   socket.onAny((event, ...args) => {
