@@ -17,6 +17,9 @@ import redisConfig, { redisAdapterConfig } from "./config/redisConfig";
 
 import healthRoutes from "./routes/healthRoutes";
 import registerSocketHandlers from "./sockets";
+import { createDriverRoutes } from "./routes/driverRoutes";
+import { setupSwagger } from "./swagger";
+import cors from "cors";
 
 async function createRedisAdapterClients() {
   const pubClient = createClient(redisAdapterConfig);
@@ -37,17 +40,22 @@ async function main() {
   const redis = new Redis(redisConfig);
   redis.on("error", (err) => console.error("Redis error:", err));
 
-  console.log("Before");
-
   // Create Redis clients for Socket.IO adapter
   const { pubClient, subClient } = await createRedisAdapterClients();
-  console.log("After");
 
   // Register Redis adapter with Socket.IO
   io.adapter(createAdapter(pubClient, subClient));
 
-  // Middleware & routes
+  // Middleware
+  app.use(cors());
+  app.use(express.json());
+
+  // Routes
   app.use("/", healthRoutes(redis));
+  app.use("/driver", createDriverRoutes(redis));
+
+  // Swagger
+  setupSwagger(app);
 
   // Socket.IO connection handler
   io.on("connection", (socket) => {
@@ -66,8 +74,10 @@ async function main() {
   httpServer.listen(PORT, () => {
     console.log(`
 🚀 Server is running on port ${PORT}
-🔌 Socket.IO:       http://localhost:${PORT}
-🛠️  Admin UI:        https://admin.socket.io/
+🔌 Socket.IO:     http://localhost:${PORT}
+🛠️  Admin UI:      https://admin.socket.io/
+📚 Swagger docs:  http://localhost:${PORT}/docs
+
     `);
   });
 }

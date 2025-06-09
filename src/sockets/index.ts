@@ -3,7 +3,7 @@ import Redis from "ioredis";
 import handleDriverEvents from "./driverHandler";
 import handleRiderEvents from "./riderHandler";
 
-const TTL_SECONDS = 120; // 1 minutes
+const TTL_SECONDS = 120;
 
 export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   socket.on("register", async ({ role, id }) => {

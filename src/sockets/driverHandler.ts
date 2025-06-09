@@ -14,10 +14,8 @@ export default function handleDriverEvents(
   socket.on("driver:updateLocation", async (data) => {
     const { location, ...dataWithoutLocation } = data;
 
-    await redis.hset(key, {
-      socketId: socket.id,
-      ...dataWithoutLocation,
-    });
+    await redis.hset(key, dataWithoutLocation);
+    await redis.expire(key, ttl);
 
     // Add geo location
     await redis.geoadd(
