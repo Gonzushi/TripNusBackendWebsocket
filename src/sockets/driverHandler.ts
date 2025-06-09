@@ -29,8 +29,6 @@ export default function handleDriverEvents(
       location.lat,
       driverId
     );
-
-    socket.emit("message", { msg: "Driver registered successfully!" });
   });
 
   socket.onAny((event, ...args) => {
