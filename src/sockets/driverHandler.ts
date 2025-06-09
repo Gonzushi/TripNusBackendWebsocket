@@ -1,15 +1,12 @@
 import { Socket } from "socket.io";
 import Redis from "ioredis";
 
-const allowedEvents = new Set([
-  "register",
-  "driver:updateLocation",
-]);
+const allowedEvents = new Set(["register", "driver:updateLocation"]);
 
 export default function handleDriverEvents(
   socket: Socket,
   redis: Redis,
-  key: string, // expects driver:{driverId}
+  key: string,
   ttl: number
 ) {
   const driverId = socket.data.id;
@@ -17,10 +14,10 @@ export default function handleDriverEvents(
   socket.on("driver:updateLocation", async (data) => {
     const { location, ...dataWithoutLocation } = data;
 
-    await redis.hset(key, "socketId", socket.id);
-    await redis.expire(key, ttl);
-    await redis.hset(key, dataWithoutLocation);
-    await redis.expire(key, ttl);
+    await redis.hset(key, {
+      socketId: socket.id,
+      ...dataWithoutLocation,
+    });
 
     // Add geo location
     await redis.geoadd(
