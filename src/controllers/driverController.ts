@@ -5,21 +5,21 @@ import { z } from "zod";
 // Schema for driver data validation matching frontend types
 const driverDataSchema = z.object({
   socketId: z.string().optional(),
-  role: z.literal("driver"),
-  id: z.string(),
+  role: z.literal("driver").optional(),
+  id: z.string().optional(),
   location: z.object({
     lat: z.number().nullable(),
     lng: z.number().nullable(),
-  }),
-  vehicle_type: z.enum(["motorcycle", "car", "unknown"]),
-  vehicle_plate: z.string(),
-  status: z.enum(["available", "on_trip", "offline", "waiting"]),
-  update_via: z.enum(["websocket", "api", "mobile_app"]),
-  last_updated_at: z.string(),
-  speed_kph: z.number(),
-  heading_deg: z.number(),
-  battery_level: z.number(),
-  accuracy_m: z.number(),
+  }).optional(),
+  vehicle_type: z.enum(["motorcycle", "car", "unknown"]).optional(),
+  vehicle_plate: z.string().optional(),
+  status: z.enum(["available", "on_trip", "offline", "waiting"]).optional(),
+  update_via: z.enum(["websocket", "api", "mobile_app"]).optional(),
+  last_updated_at: z.string().optional(),
+  speed_kph: z.number().optional(),
+  heading_deg: z.number().optional(),
+  battery_level: z.number().optional(),
+  accuracy_m: z.number().optional(),
 });
 
 export const createDriverController = (redis: Redis) => {
