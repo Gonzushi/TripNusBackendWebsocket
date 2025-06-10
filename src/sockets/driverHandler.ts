@@ -15,7 +15,6 @@ export default function handleDriverEvents(
     const { location, ...dataWithoutLocation } = data;
 
     await redis.hset(key, dataWithoutLocation);
-    await redis.expire(key, ttl);
 
     // Add geo location
     await redis.geoadd(

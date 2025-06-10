@@ -43,8 +43,7 @@ export const createDriverController = (redis: Redis) => {
 
       // Update driver data in Redis hash
       await redis.hset(`driver:${driverId}`, dataWithoutLocation);
-      await redis.expire(`driver:${driverId}`, TTL_SECONDS);
-
+      
       // Update driver location in geo set if location is provided and not null
       if (location && location.lat !== null && location.lng !== null) {
         await redis.geoadd(
