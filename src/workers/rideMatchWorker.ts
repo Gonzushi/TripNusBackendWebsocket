@@ -52,11 +52,13 @@ export function startRideMatchWorker(
 
       const retryCount = job.data.retry_count ?? 0;
 
-      const previousDriverId = attemptedDrivers[attemptedDrivers.length - 1];
-      if (previousDriverId) {
-        await supabase.rpc("increment_missed_requests", {
-          driver_id: previousDriverId,
-        });
+      if (retryCount > 0) {
+        const previousDriverId = attemptedDrivers[attemptedDrivers.length - 1];
+        if (previousDriverId) {
+          await supabase.rpc("increment_missed_requests", {
+            driver_id: previousDriverId,
+          });
+        }
       }
 
       const geoResults = (await redis.geosearch(
