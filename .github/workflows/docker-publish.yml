@@ -22,12 +22,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t hendrywidyanto/tripnus-backend-websocket:latest -t hendrywidyanto/tripnus-backend-websocket:${{ env.SHORT_SHA }} -f Dockerfile.prod .
+          docker build -t hendrywidyanto/tripnus-backend-websocket-workers:latest -t hendrywidyanto/tripnus-backend-websocket-workers:${{ env.SHORT_SHA }} -f Dockerfile.prod .
 
       - name: Push Docker image
         run: |
-          docker push hendrywidyanto/tripnus-backend-websocket:latest
-          docker push hendrywidyanto/tripnus-backend-websocket:${{ env.SHORT_SHA }}
+          docker push hendrywidyanto/tripnus-backend-websocket-workers:latest
+          docker push hendrywidyanto/tripnus-backend-websocket-workers:${{ env.SHORT_SHA }}
           
       - name: Trigger Coolify Deploy
         run: |

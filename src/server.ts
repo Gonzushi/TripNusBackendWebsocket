@@ -1,26 +1,29 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+/* ---------------- Core & 3rd Party Imports ---------------- */
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import cors from "cors";
 import { instrument } from "@socket.io/admin-ui";
-
-import Redis from "ioredis"; // For app data
-import { createClient } from "redis"; // For socket.io adapter
+import Redis from "ioredis";
+import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { setupRedisSubscriber } from "./subscribers/index";
+import { Queue } from "bullmq";
 
+/* ---------------- Internal Modules ---------------- */
+import redisConfig, { redisAdapterConfig } from "./config/redisConfig";
 import { socketConfig } from "./config/socketConfig";
 import { adminUiConfig } from "./config/adminUiConfig";
-import redisConfig, { redisAdapterConfig } from "./config/redisConfig";
-
+import { setSharedInstances } from "./shared";
+import { setupRedisSubscriber } from "./subscribers/index";
 import healthRoutes from "./routes/healthRoutes";
-import registerSocketHandlers from "./sockets";
 import { createDriverRoutes } from "./routes/driverRoutes";
+import registerSocketHandlers from "./sockets";
 import { setupSwagger } from "./swagger";
-import cors from "cors";
 
+/* ---------------- Redis Adapter Setup ---------------- */
 async function createRedisAdapterClients() {
   const pubClient = createClient(redisAdapterConfig);
   const subClient = pubClient.duplicate();
@@ -28,48 +31,43 @@ async function createRedisAdapterClients() {
   return { pubClient, subClient };
 }
 
+/* ---------------- Main Server Function ---------------- */
 async function main() {
-  // Express and HTTP server
   const app = express();
   const httpServer = createServer(app);
-
-  // Socket.IO server
   const io = new Server(httpServer, socketConfig);
 
-  // Redis client for your app data (ioredis)
   const redis = new Redis(redisConfig);
   redis.on("error", (err) => console.error("Redis error:", err));
 
-  // Create Redis clients for Socket.IO adapter
   const { pubClient, subClient } = await createRedisAdapterClients();
-
-  // Register Redis adapter with Socket.IO
   io.adapter(createAdapter(pubClient, subClient));
 
-  // Middleware
+  /* ------------- Middleware ------------- */
   app.use(cors());
   app.use(express.json());
 
-  // Routes
+  /* ------------- Routes ------------- */
   app.use("/", healthRoutes(redis));
   app.use("/driver", createDriverRoutes(redis));
-
-  // Swagger
   setupSwagger(app);
 
-  // Socket.IO connection handler
+  /* ------------- Socket.IO ------------- */
   io.on("connection", (socket) => {
     console.log(`✅ Connected: ${socket.id}`);
     registerSocketHandlers(socket, redis);
   });
 
-  // 🔥 Setup Redis subscriber
-  setupRedisSubscriber(io, redis);
-
-  // Admin UI
   instrument(io, adminUiConfig);
 
-  // Start server
+  /* ------------- Redis Subscriber ------------- */
+  setupRedisSubscriber(io, redis);
+
+  /* ------------- Shared Instances ------------- */
+  const rideMatchQueue = new Queue("ride-matching", { connection: redis });
+  setSharedInstances(redis, rideMatchQueue);
+
+  /* ------------- Start Server ------------- */
   const PORT = process.env.PORT || 3001;
   httpServer.listen(PORT, () => {
     console.log(`
@@ -77,11 +75,11 @@ async function main() {
 🔌 Socket.IO:     http://localhost:${PORT}
 🛠️  Admin UI:      https://admin.socket.io/
 📚 Swagger docs:  http://localhost:${PORT}/docs
-
     `);
   });
 }
 
+/* ---------------- Start App ---------------- */
 main().catch((err) => {
-  console.error("Failed to start server:", err);
+  console.error("❌ Failed to start server:", err);
 });
