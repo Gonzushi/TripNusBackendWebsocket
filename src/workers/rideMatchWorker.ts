@@ -205,7 +205,7 @@ export function startRideMatchWorker(
         fare_breakdown,
         pickup,
         dropoff,
-        timestamp,
+        request_expired_at: timestamp + WAIT_TIME * 1000,
       };
 
       await supabase
