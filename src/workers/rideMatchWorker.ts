@@ -190,7 +190,7 @@ export function startRideMatchWorker(
 
       const [driverId, distanceToPickupStr] = selectedDriver;
       const distanceToPickup = parseFloat(distanceToPickupStr);
-      const timestamp = new Date().toISOString();
+      const timestamp = Date.now();
 
       const messageData = {
         type: "NEW_RIDE_REQUEST",
