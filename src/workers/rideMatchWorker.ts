@@ -55,12 +55,9 @@ export function startRideMatchWorker(
 
       const previousDriverId = attemptedDrivers[attemptedDrivers.length - 1];
       if (previousDriverId) {
-        const { data, error } = await supabase.rpc(
-          "increment_missed_requests",
-          {
-            driver_id: previousDriverId,
-          }
-        );
+        await supabase.rpc("increment_missed_requests", {
+          driver_id: previousDriverId,
+        });
       }
 
       const geoResults = (await redis.geosearch(
@@ -83,7 +80,7 @@ export function startRideMatchWorker(
       const { data: driversData } = await supabase
         .from("drivers")
         .select(
-          "id, is_online, availability_status, is_suspended, decline_count, missed_requests"
+          "id, is_online, availability_status, is_suspended, decline_count, missed_requests, push_token"
         )
         .in("id", candidateIds);
 
@@ -109,20 +106,14 @@ export function startRideMatchWorker(
             .update({ is_online: false, is_suspended: true })
             .eq("id", driverId);
 
-          const { data: suspendedDriverData } = await supabase
-            .from("drivers")
-            .select("push_token")
-            .eq("id", driverId)
-            .single();
-
           const suspensionMessage = {
             type: "ACCOUNT_DEACTIVATED_TEMPORARILY",
             reason:
               "Anda melewatkan atau menolak terlalu banyak permintaan. Status Anda telah dinonaktifkan. Silakan nonaktifkan dan aktifkan kembali tombol untuk menerima order.",
           };
 
-          if (suspendedDriverData?.push_token) {
-            await sendPushNotification(suspendedDriverData.push_token, {
+          if (driver.push_token) {
+            await sendPushNotification(driver.push_token, {
               title: "Status Anda: Tidak Aktif Sementara",
               body: suspensionMessage.reason,
               data: suspensionMessage,
@@ -134,7 +125,6 @@ export function startRideMatchWorker(
             JSON.stringify(suspensionMessage)
           );
 
-          // Now safe to remove driver from Redis
           await redis.zrem(GEO_KEY, driverId);
           await redis.del(`driver:${driverId}`);
 
@@ -143,13 +133,10 @@ export function startRideMatchWorker(
 
         if (driver.availability_status === "busy") continue;
 
-        const isReviewing = await redis.get(
-          `driver:is_reviewing:${driverId}`
-        );
+        const isReviewing = await redis.get(`driver:is_reviewing:${driverId}`);
         if (isReviewing === "true") continue;
 
         selectedDriver = [driverId, distanceStr];
-
         break;
       }
 
@@ -203,6 +190,7 @@ export function startRideMatchWorker(
 
       const [driverId, distanceToPickupStr] = selectedDriver;
       const distanceToPickup = parseFloat(distanceToPickupStr);
+      const timestamp = new Date().toISOString();
 
       const messageData = {
         type: "NEW_RIDE_REQUEST",
@@ -217,6 +205,7 @@ export function startRideMatchWorker(
         fare_breakdown,
         pickup,
         dropoff,
+        timestamp,
       };
 
       await supabase
@@ -228,21 +217,16 @@ export function startRideMatchWorker(
             message_data: messageData,
             attemptedDrivers: [...attemptedDrivers, driverId],
             retry_count: retryCount,
-            attempted_at: new Date().toISOString(),
+            attempted_at: timestamp,
           },
         })
         .eq("id", ride_id);
 
-      const { data: driverData } = await supabase
-        .from("drivers")
-        .select("push_token")
-        .eq("id", driverId)
-        .single();
-
-      if (driverData?.push_token) {
-        await sendPushNotification(driverData.push_token, {
+      const driver = driverMap.get(driverId);
+      if (driver?.push_token) {
+        await sendPushNotification(driver.push_token, {
           title: "Ada penumpang baru!",
-          body: `Jemput di ${pickup.address} (${messageData.distance_to_pickup_km} km)`,
+          body: `Jemput di ${pickup.address} (${distanceToPickup} km)`,
           data: messageData,
         });
       }
@@ -252,7 +236,11 @@ export function startRideMatchWorker(
         JSON.stringify(messageData)
       );
 
-      await redis.setex(`driver:is_reviewing:${driverId}`, WAIT_TIME + 5, "true");
+      await redis.setex(
+        `driver:is_reviewing:${driverId}`,
+        WAIT_TIME + 5,
+        "true"
+      );
 
       await rideMatchQueue.add(
         `ride_match_${ride_id}`,
