@@ -219,7 +219,7 @@ export function startRideMatchWorker(
           match_attempt: {
             message_data: messageData,
             attemptedDrivers: [...attemptedDrivers, driverId],
-            retry_count: retryCount,
+            retry_count: retryCount + 1,
             attempted_at: timestamp,
           },
         })
@@ -253,6 +253,7 @@ export function startRideMatchWorker(
           retry_count: retryCount + 1,
         },
         {
+          jobId: `ride_match_${ride_id}_retry_${retryCount + 1}`,
           delay: WAIT_TIME * 1000,
           removeOnComplete: true,
           removeOnFail: true,
