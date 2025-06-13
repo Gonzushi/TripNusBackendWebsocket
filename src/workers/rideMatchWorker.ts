@@ -148,7 +148,11 @@ export function startRideMatchWorker(
 
         await supabase
           .from("rides")
-          .update({ status: "cancelled", status_reason: reason })
+          .update({
+            status: "cancelled",
+            status_reason: reason,
+            driver_id: null,
+          })
           .eq("id", ride_id);
 
         const { data: rideData } = await supabase
