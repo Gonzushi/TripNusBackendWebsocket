@@ -245,11 +245,6 @@ export function startRideMatchWorker(
         "true"
       );
 
-      const existingJob = await rideMatchQueue.getJob(`ride_match_${ride_id}`);
-      if (existingJob) {
-        await existingJob.remove(); 
-      }
-
       await rideMatchQueue.add(
         `ride_match_${ride_id}`,
         {
