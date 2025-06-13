@@ -6,7 +6,6 @@ import { sendPushNotification } from "../services/notificationService";
 import redisConfigBullMQ from "../config/redisConfig";
 
 type RideMatchJobData = {
-  jobId: string;
   ride_id: string;
   distance_m: number;
   duration_s: number;
@@ -254,6 +253,7 @@ export function startRideMatchWorker(
           retry_count: retryCount + 1,
         },
         {
+          jobId: `ride_match_${ride_id}`,
           delay: WAIT_TIME * 1000,
           removeOnComplete: true,
           removeOnFail: true,
