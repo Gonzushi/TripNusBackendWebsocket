@@ -51,6 +51,14 @@ export default function handleRiderEvents(
       console.warn(`❌ Invalid rider location from ${riderId}:`, data);
       return;
     }
+
+    try {
+      // Save to Redis
+      await redis.hset(key, data);
+      await redis.geoadd("drivers:locations", data.lng, data.lat, riderId);
+    } catch (err) {
+      console.error(`❌ Error saving location for rider ${riderId}:`, err);
+    }
   });
 
   // Guard against unknown event
