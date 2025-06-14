@@ -1,10 +1,6 @@
 import { Socket } from "socket.io";
 import Redis from "ioredis";
-
-type DriverLocationUpdate = {
-  location: { lat: number; lng: number };
-  [key: string]: any;
-};
+import { DriverData } from "./types";
 
 const allowedEvents = new Set(["register", "driver:updateLocation"]);
 
@@ -15,11 +11,12 @@ export default function handleDriverEvents(
 ) {
   const driverId = socket.data.id;
 
-  socket.on("driver:updateLocation", async (data: DriverLocationUpdate) => {
+  socket.on("driver:updateLocation", async (data: DriverData) => {
     if (
-      !data?.location ||
-      typeof data.location.lat !== "number" ||
-      typeof data.location.lng !== "number"
+      !data.lat ||
+      !data.lng ||
+      typeof data.lat !== "number" ||
+      typeof data.lng !== "number"
     ) {
       console.warn(
         `❌ Invalid location payload from driver ${driverId}:`,
@@ -28,15 +25,13 @@ export default function handleDriverEvents(
       return;
     }
 
-    const { location, ...dataWithoutLocation } = data;
-
     try {
-      await redis.hset(key, dataWithoutLocation);
+      await redis.hset(key, data);
 
       await redis.geoadd(
         "drivers:locations",
-        location.lng,
-        location.lat,
+        data.lng,
+        data.lat,
         driverId
       );
     } catch (err) {

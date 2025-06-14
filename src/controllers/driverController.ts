@@ -7,10 +7,8 @@ const driverDataSchema = z.object({
   socketId: z.string().optional(),
   role: z.literal("driver").optional(),
   id: z.string().optional(),
-  location: z.object({
-    lat: z.number().nullable(),
-    lng: z.number().nullable(),
-  }).optional(),
+  lat: z.number().nullable().optional(),
+  lng: z.number().nullable().optional(),
   vehicle_type: z.enum(["motorcycle", "car", "unknown"]).optional(),
   vehicle_plate: z.string().optional(),
   status: z.enum(["available", "on_trip", "offline", "waiting"]).optional(),
@@ -23,14 +21,12 @@ const driverDataSchema = z.object({
 });
 
 export const createDriverController = (redis: Redis) => {
-  const TTL_SECONDS = 120; 
+  const TTL_SECONDS = 120;
 
   const updateLocation: RequestHandler = async (req, res): Promise<void> => {
     try {
-      const { location, ...dataWithoutLocation } = driverDataSchema.parse(
-        req.body
-      );
-      const driverId = dataWithoutLocation.id;
+      const data = driverDataSchema.parse(req.body);
+      const driverId = data.id;
 
       if (!driverId) {
         res.status(400).json({
@@ -42,16 +38,16 @@ export const createDriverController = (redis: Redis) => {
       }
 
       // Update driver data in Redis hash
-      await redis.hset(`driver:${driverId}`, dataWithoutLocation);
-      
+      await redis.hset(`driver:${driverId}`, data);
+
       // Update driver location in geo set if location is provided and not null
-      if (location && location.lat !== null && location.lng !== null) {
-        await redis.geoadd(
-          "drivers:locations",
-          location.lng,
-          location.lat,
-          driverId
-        );
+      if (
+        data.lat !== null &&
+        data.lng !== null &&
+        data.lat !== undefined &&
+        data.lng !== undefined
+      ) {
+        await redis.geoadd("drivers:locations", data.lng, data.lat, driverId);
       }
 
       res.status(200).json({

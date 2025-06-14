@@ -4,9 +4,11 @@ import handleDriverEvents from "./driverHandler";
 import handleRiderEvents from "./riderHandler";
 import { getRedisKey, isValidRole } from "./utils";
 import { cleanupDriver, cleanupRider } from "./utils";
+import { DriverData } from "./types";
 
 export default function registerSocketHandlers(socket: Socket, redis: Redis) {
-  socket.on("register", async ({ role, id }) => {
+  socket.on("register", async (data: DriverData) => {
+    const { role, id } = data;
     if (!role || !id || !isValidRole(role)) {
       console.warn("❌ Invalid registration payload:", { role, id });
       socket.disconnect();
@@ -16,13 +18,10 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
     socket.data.role = role;
     socket.data.id = id;
 
-    const key = getRedisKey(role, id);
+    const key = await getRedisKey(role, id);
 
     try {
-      await redis.hset(key, {
-        socketId: socket.id,
-        last_updated_at: Date.now().toString(),
-      });
+      await redis.hset(key, data);
     } catch (err) {
       console.error(`❌ Failed to save socketId in Redis for ${key}:`, err);
       socket.disconnect();

@@ -1,6 +1,6 @@
 import Redis from "ioredis";
 
-export function getRedisKey(role: string, id: string): string {
+export async function getRedisKey(role: string, id: string): Promise<string> {
   return `${role === "driver" ? "driver" : "rider"}:${id}`;
 }
 

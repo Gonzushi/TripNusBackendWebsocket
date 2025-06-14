@@ -12,27 +12,14 @@ export default function handleRiderEvents(
 
   // You could extend this in the future with location sharing
   socket.on("rider:updateLocation", async (data) => {
-    const { location, ...rest } = data;
-
     if (
-      !location ||
-      typeof location.lat !== "number" ||
-      typeof location.lng !== "number"
+      !data.lat ||
+      !data.lng ||
+      typeof data.lat !== "number" ||
+      typeof data.lng !== "number"
     ) {
       console.warn(`❌ Invalid location payload from rider ${riderId}:`, data);
       return;
-    }
-
-    try {
-      await redis.hset(key, rest);
-      await redis.geoadd(
-        "riders:locations",
-        location.lng,
-        location.lat,
-        riderId
-      );
-    } catch (err) {
-      console.error(`❌ Error saving location for rider ${riderId}:`, err);
     }
   });
 
