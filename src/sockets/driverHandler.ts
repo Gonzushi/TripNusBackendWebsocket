@@ -10,7 +10,6 @@ export default function handleDriverEvents(
   key: string
 ) {
   const driverId = socket.data.id;
-
   socket.on("driver:updateLocation", async (data: DriverData) => {
     if (
       !data.lat ||
@@ -28,12 +27,7 @@ export default function handleDriverEvents(
     try {
       await redis.hset(key, data);
 
-      await redis.geoadd(
-        "drivers:locations",
-        data.lng,
-        data.lat,
-        driverId
-      );
+      await redis.geoadd("drivers:locations", data.lng, data.lat, driverId);
     } catch (err) {
       console.error(`❌ Error saving location for driver ${driverId}:`, err);
     }
