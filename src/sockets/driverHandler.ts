@@ -1,4 +1,4 @@
-import { Socket } from "socket.io";
+import { Socket, Server } from "socket.io";
 import Redis from "ioredis";
 import { DriverData } from "./types";
 
@@ -10,6 +10,7 @@ export default function handleDriverEvents(
   key: string
 ) {
   const driverId = socket.data.id;
+
   socket.on("driver:updateLocation", async (data: DriverData) => {
     if (
       !data.lat ||
@@ -25,9 +26,17 @@ export default function handleDriverEvents(
     }
 
     try {
+      // Save to Redis
       await redis.hset(key, data);
-
       await redis.geoadd("drivers:locations", data.lng, data.lat, driverId);
+
+      // Broadcast to subscribed riders
+      const room = `driver:${driverId}`;
+      socket.to(room).emit("driver:locationUpdate", {
+        driverId,
+        lat: data.lat,
+        lng: data.lng,
+      });
     } catch (err) {
       console.error(`❌ Error saving location for driver ${driverId}:`, err);
     }

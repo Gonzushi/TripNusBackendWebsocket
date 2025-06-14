@@ -17,7 +17,6 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
     next();
   });
 
-  // Updated: register event with callback-based ack
   socket.on(
     "register",
     async (data: DriverData, callback: (res: { success: boolean }) => void) => {
@@ -48,7 +47,6 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
         handleRiderEvents(socket, redis, key);
       }
 
-      // ✅ Call the ack callback
       if (typeof callback === "function") {
         callback({ success: true });
       } else {
@@ -66,6 +64,15 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
         await cleanupDriver(redis, id);
       } else {
         await cleanupRider(redis, id);
+
+        // 🚨 Auto-unsubscribe rider from all driver rooms
+        const rooms = Array.from(socket.rooms).filter((r) => r !== socket.id);
+        for (const room of rooms) {
+          socket.leave(room);
+          console.log(
+            `👋 Rider ${id} auto-unsubscribed from ${room} on disconnect`
+          );
+        }
       }
 
       console.log(`❌ Cleaned up ${role} ${id}`);
