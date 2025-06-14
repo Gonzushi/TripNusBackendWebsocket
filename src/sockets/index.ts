@@ -6,7 +6,7 @@ import { getRedisKey, isValidRole } from "./utils";
 import { cleanupDriver, cleanupRider } from "./utils";
 import { DriverData } from "./types";
 
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 
 export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   // Middleware for logging

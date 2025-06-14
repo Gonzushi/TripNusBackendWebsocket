@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { Redis } from "ioredis";
 import { z } from "zod";
+import { Server } from "socket.io";
 
 // Schema for driver data validation matching frontend types
 const driverDataSchema = z.object({
@@ -20,9 +21,7 @@ const driverDataSchema = z.object({
   accuracy_m: z.number().optional(),
 });
 
-export const createDriverController = (redis: Redis) => {
-  const TTL_SECONDS = 120;
-
+export const createDriverController = (io: Server, redis: Redis) => {
   const updateLocation: RequestHandler = async (req, res): Promise<void> => {
     try {
       const data = driverDataSchema.parse(req.body);
@@ -49,6 +48,14 @@ export const createDriverController = (redis: Redis) => {
       ) {
         await redis.geoadd("drivers:locations", data.lng, data.lat, driverId);
       }
+
+      // Broadcast to subscribed riders
+
+      const room = `driver:${driverId}`;
+      io.to(room).emit("driver:locationUpdate", {
+        lat: data.lat,
+        lng: data.lng,
+      });
 
       res.status(200).json({
         status: 200,

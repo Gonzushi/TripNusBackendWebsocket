@@ -15,8 +15,12 @@ export default function handleRiderEvents(
 ) {
   const riderId = socket.data.id;
 
+  console.log(`🔧 Registering handlers for rider ${riderId}`);
+
   // Rider subscribes to a driver to get location updates.
   socket.on("rider:subscribeToDriver", async ({ driverId }) => {
+    console.log("Rider subscribing to driver", driverId);
+
     const room = `driver:${driverId}`;
     socket.join(room);
     console.log(`✅ Rider ${riderId} subscribed to ${room}`);

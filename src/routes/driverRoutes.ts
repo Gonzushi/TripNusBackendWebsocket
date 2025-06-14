@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { Redis } from "ioredis";
 import { createDriverController } from "../controllers/driverController";
+import { Server } from "socket.io";
 
 const router = Router();
 
@@ -164,8 +165,8 @@ const router = Router();
  *                   type: string
  *                   example: INTERNAL_SERVER_ERROR
  */
-export function createDriverRoutes(redis: Redis) {
-  const driverController = createDriverController(redis);
+export function createDriverRoutes(io: Server, redis: Redis) {
+  const driverController = createDriverController(io, redis);
 
   router.put("/", driverController.updateLocation);
 

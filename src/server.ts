@@ -49,7 +49,7 @@ async function main() {
 
   /* ------------- Routes ------------- */
   app.use("/", healthRoutes(redis));
-  app.use("/driver", createDriverRoutes(redis));
+  app.use("/driver", createDriverRoutes(io, redis));
   setupSwagger(app);
 
   /* ------------- Socket.IO ------------- */
