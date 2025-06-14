@@ -23,12 +23,11 @@ export default function handleRiderEvents(
 
     // Optional: Send last known location immediately
     const driverKey = `driver:${driverId}`;
-    const locationData = await redis.hgetall(driverKey);
-    if (locationData?.lat && locationData?.lng) {
+    const driverData = await redis.hgetall(driverKey);
+    if (driverData?.lat && driverData?.lng) {
       socket.emit("driver:locationUpdate", {
-        driverId,
-        lat: parseFloat(locationData.lat),
-        lng: parseFloat(locationData.lng),
+        lat: parseFloat(driverData.lat),
+        lng: parseFloat(driverData.lng),
       });
     }
   });
