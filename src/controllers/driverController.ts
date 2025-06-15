@@ -27,6 +27,8 @@ export const createDriverController = (io: Server, redis: Redis) => {
       const data = driverDataSchema.parse(req.body);
       const driverId = data.id;
 
+      console.log("Updating driver location", driverId);
+
       if (!driverId) {
         res.status(400).json({
           status: 400,
