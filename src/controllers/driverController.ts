@@ -55,8 +55,8 @@ export const createDriverController = (io: Server, redis: Redis) => {
 
       const room = `driver:${driverId}`;
       io.to(room).emit("driver:locationUpdate", {
-        lat: data.lat,
-        lng: data.lng,
+        latitude: data.lat,
+        longitude: data.lng,
       });
 
       res.status(200).json({

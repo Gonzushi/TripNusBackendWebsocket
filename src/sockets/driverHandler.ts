@@ -36,6 +36,10 @@ export default function handleDriverEvents(
         lat: data.lat,
         lng: data.lng,
       });
+
+      console.log(
+        `✅ Connected: ${socket.id} | Updating location for ${data.role} ${data.id} | ${data.lat}, ${data.lng}`
+      );
     } catch (err) {
       console.error(`❌ Error saving location for driver ${driverId}:`, err);
     }

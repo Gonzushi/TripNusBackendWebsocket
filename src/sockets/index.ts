@@ -12,7 +12,8 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   // Middleware for logging
   socket.use(([event, ...args], next) => {
     if (DEBUG_MODE) {
-      console.log("🔌 Incoming event:", event, args);
+      console.log("🔌 Incoming event:", event);
+      // console.log("🔌 Incoming event:", event, args);
     }
     next();
   });
@@ -20,6 +21,8 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   socket.on(
     "register",
     async (data: DriverData, callback: (res: { success: boolean }) => void) => {
+      console.log(`✅ Connected: ${socket.id} | Registering ${data.role} ${data.id}`);
+
       const { role, id } = data;
 
       if (!role || !id || !isValidRole(role)) {
@@ -56,10 +59,11 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   );
 
   socket.on("disconnect", async (reason) => {
+    console.log(`❌ Disconnected: ${socket.id} | Registering ${socket.data.role} ${socket.data.id} | Reason: ${reason}`);
+    
     const { role, id } = socket.data;
     if (!role || !id || !isValidRole(role)) return;
 
-    console.log("❌ Disconnecting socket", role, id, reason);
 
     try {
       if (role === "driver") {
