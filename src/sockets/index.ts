@@ -59,7 +59,7 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
     const { role, id } = socket.data;
     if (!role || !id || !isValidRole(role)) return;
 
-    console.log("Disconnecting socket", role, id);
+    console.log("❌ Disconnecting socket", role, id);
 
     try {
       if (role === "driver") {
