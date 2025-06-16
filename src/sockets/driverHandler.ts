@@ -12,6 +12,7 @@ export default function handleDriverEvents(
   const driverId = socket.data.id;
 
   socket.on("driver:updateLocation", async (data: DriverData) => {
+    console.log("🔌 Incoming event driver updateLocation:", data);
     if (
       !data.lat ||
       !data.lng ||
