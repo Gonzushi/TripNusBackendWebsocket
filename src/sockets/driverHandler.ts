@@ -33,8 +33,9 @@ export default function handleDriverEvents(
       // Broadcast to subscribed riders
       const room = `driver:${driverId}`;
       socket.to(room).emit("driver:locationUpdate", {
-        lat: data.lat,
-        lng: data.lng,
+        latitude: data.lat,
+        longitude: data.lng,
+        heading_deg: data.heading_deg,
       });
 
       console.log(
