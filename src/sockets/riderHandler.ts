@@ -30,6 +30,7 @@ export default function handleRiderEvents(
         socket.emit("driver:locationUpdate", {
           latitude: parseFloat(driverData.lat),
           longitude: parseFloat(driverData.lng),
+          heading_deg: parseFloat(driverData.heading_deg),
         });
       }
 
