@@ -31,6 +31,7 @@ export default function handleRiderEvents(
           latitude: parseFloat(driverData.lat),
           longitude: parseFloat(driverData.lng),
           heading_deg: parseFloat(driverData.heading_deg),
+          speed_kph: parseFloat(driverData.speed_kph),
         });
       }
 

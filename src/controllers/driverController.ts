@@ -58,6 +58,7 @@ export const createDriverController = (io: Server, redis: Redis) => {
         latitude: data.lat,
         longitude: data.lng,
         heading_deg: data.heading_deg,
+        speed_kph: data.speed_kph,
       });
 
       res.status(200).json({
