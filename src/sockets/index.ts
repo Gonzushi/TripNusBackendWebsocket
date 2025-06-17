@@ -6,7 +6,7 @@ import { getRedisKey, isValidRole } from "./utils";
 import { cleanupDriver, cleanupRider } from "./utils";
 import { DriverData } from "./types";
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
 export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   // Middleware for logging
@@ -37,7 +37,7 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
       const key = await getRedisKey(role, id);
 
       try {
-        await redis.hset(key, data);
+        await redis.hset(key, {...data, socketId: socket.id});
       } catch (err) {
         console.error(`❌ Failed to save socketId in Redis for ${key}:`, err);
         socket.disconnect();

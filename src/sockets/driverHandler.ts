@@ -11,11 +11,11 @@ export default function handleDriverEvents(
 ) {
   if (socket.data.driverHandlersRegistered) return;
   socket.data.driverHandlersRegistered = true;
-  
+
   const driverId = socket.data.id;
 
   socket.on("driver:updateLocation", async (data: DriverData) => {
-    console.log("🔌 Incoming event driver updateLocation:", data);
+    console.log("🔌 Incoming event driver updateLocation");
     if (
       !data.lat ||
       !data.lng ||
@@ -31,7 +31,7 @@ export default function handleDriverEvents(
 
     try {
       // Save to Redis
-      await redis.hset(key, data);
+      await redis.hset(key, { ...data, socketId: socket.id });
       await redis.geoadd("drivers:locations", data.lng, data.lat, driverId);
 
       // Broadcast to subscribed riders

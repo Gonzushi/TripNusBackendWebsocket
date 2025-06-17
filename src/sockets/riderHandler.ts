@@ -77,7 +77,7 @@ export default function handleRiderEvents(
     }
 
     try {
-      await redis.hset(key, data);
+      await redis.hset(key, { ...data, socketId: socket.id });
       await redis.geoadd("drivers:locations", data.lng, data.lat, riderId);
     } catch (err) {
       console.error(`❌ Error saving location for rider ${riderId}:`, err);
