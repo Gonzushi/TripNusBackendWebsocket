@@ -13,6 +13,9 @@ export default function handleRiderEvents(
   redis: Redis,
   key: string
 ) {
+  if (socket.data.riderHandlersRegistered) return;
+  socket.data.riderHandlersRegistered = true;
+
   const riderId = socket.data.id;
 
   // Rider subscribes to a driver to get location updates.

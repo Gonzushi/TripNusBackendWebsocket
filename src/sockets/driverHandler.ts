@@ -9,6 +9,9 @@ export default function handleDriverEvents(
   redis: Redis,
   key: string
 ) {
+  if (socket.data.driverHandlersRegistered) return;
+  socket.data.driverHandlersRegistered = true;
+  
   const driverId = socket.data.id;
 
   socket.on("driver:updateLocation", async (data: DriverData) => {
