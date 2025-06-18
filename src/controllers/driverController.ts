@@ -6,7 +6,7 @@ import { Server } from "socket.io";
 // Schema for driver data validation matching frontend types
 const driverDataSchema = z.object({
   socketId: z.string().optional(),
-  availabilityStatus: z.enum(["available", "en_route_to_pickup", "waiting_at_pickup", "en_route_to_drop_off"]).optional(),
+  availabilityStatus: z.enum(["available", "en_route_to_pickup", "waiting_at_pickup", "en_route_to_drop_off", "not_available"]).optional(),
   role: z.literal("driver").optional(),
   id: z.string().optional(),
   lat: z.number().nullable().optional(),
@@ -27,7 +27,7 @@ export const createDriverController = (io: Server, redis: Redis) => {
       const data = driverDataSchema.parse(req.body);
       const driverId = data.id;
 
-      console.log("📍 Updating driver location", driverId, data.lat, data.lng);
+      console.log("📍 Background driver location", driverId, data.lat, data.lng);
 
       if (!driverId) {
         res.status(400).json({

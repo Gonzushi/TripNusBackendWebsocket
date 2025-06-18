@@ -63,7 +63,7 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
 
   socket.on("disconnect", async (reason) => {
     console.log(
-      `❌ Disconnected: ${socket.id} | Registering ${socket.data.role} ${socket.data.id} | Reason: ${reason}`
+      `❌ Disconnected: ${socket.id} | ${socket.data.role} ${socket.data.id} | Reason: ${reason}`
     );
 
     const { role, id } = socket.data;
