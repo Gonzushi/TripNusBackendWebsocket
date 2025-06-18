@@ -8,10 +8,10 @@ export function isValidRole(role: string): boolean {
   return role === "driver" || role === "rider";
 }
 
-export async function cleanupDriver(redis: Redis, id: string) {
+export async function cleanupDriver(redis: Redis, id: string, vehicle_type: string) {
   await Promise.all([
     redis.del(`driver:${id}`),
-    redis.zrem("drivers:locations", id),
+    redis.zrem(`drivers:locations:${vehicle_type}`, id),
   ]);
 }
 

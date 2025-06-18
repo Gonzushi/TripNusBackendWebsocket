@@ -32,7 +32,12 @@ export default function handleDriverEvents(
     try {
       // Save to Redis
       await redis.hset(key, { ...data, socketId: socket.id });
-      await redis.geoadd("drivers:locations", data.lng, data.lat, driverId);
+
+      if (data.availabilityStatus === 'available') {
+        await redis.geoadd(`drivers:locations:${data.vehicle_type}`, data.lng, data.lat, driverId);
+      } else {
+        redis.zrem(`drivers:locations:${data.vehicle_type}`, driverId);
+      }
 
       // Broadcast to subscribed riders
       const room = `driver:${driverId}`;

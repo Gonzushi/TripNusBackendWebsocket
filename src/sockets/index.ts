@@ -21,7 +21,9 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   socket.on(
     "register",
     async (data: DriverData, callback: (res: { success: boolean }) => void) => {
-      console.log(`✅ Connected: ${socket.id} | Registering ${data.role} ${data.id}`);
+      console.log(
+        `✅ Connected: ${socket.id} | Registering ${data.role} ${data.id}`
+      );
 
       const { role, id } = data;
 
@@ -33,11 +35,12 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
 
       socket.data.role = role;
       socket.data.id = id;
+      socket.data.vehicle_type = data.vehicle_type;
 
       const key = await getRedisKey(role, id);
 
       try {
-        await redis.hset(key, {...data, socketId: socket.id});
+        await redis.hset(key, { ...data, socketId: socket.id });
       } catch (err) {
         console.error(`❌ Failed to save socketId in Redis for ${key}:`, err);
         socket.disconnect();
@@ -59,15 +62,16 @@ export default function registerSocketHandlers(socket: Socket, redis: Redis) {
   );
 
   socket.on("disconnect", async (reason) => {
-    console.log(`❌ Disconnected: ${socket.id} | Registering ${socket.data.role} ${socket.data.id} | Reason: ${reason}`);
-    
+    console.log(
+      `❌ Disconnected: ${socket.id} | Registering ${socket.data.role} ${socket.data.id} | Reason: ${reason}`
+    );
+
     const { role, id } = socket.data;
     if (!role || !id || !isValidRole(role)) return;
 
-
     try {
       if (role === "driver") {
-        await cleanupDriver(redis, id);
+        await cleanupDriver(redis, id, socket.data.vehicle_type);
       } else {
         await cleanupRider(redis, id);
 

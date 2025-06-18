@@ -13,24 +13,36 @@ export async function cleanInactiveDriversWorker(
 ) {
   const { data: drivers } = await supabase
     .from("drivers")
-    .select("id, decline_count, missed_requests, is_online, push_token")
+    .select(
+      "id, decline_count, missed_requests, is_online, push_token, vehicle_type"
+    )
     .eq("is_online", true)
     .or("decline_count.gt.3,missed_requests.gt.3");
 
   if (!drivers || drivers.length === 0) return;
 
-  const driverIdsToSuspend = drivers.map((driver) => driver.id);
+  const allDriverIdsToSuspend = drivers.map((driver) => driver.id);
+
+  const motorcycleDriverIdsToSuspend = drivers
+    .filter((driver) => driver.vehicle_type === "motorcycle")
+    .map((driver) => driver.id);
+
+  const carDriverIdsToSuspend = drivers
+    .filter((driver) => driver.vehicle_type === "car")
+    .map((driver) => driver.id);
 
   // 🚀 Batch update in Supabase
   await supabase
     .from("drivers")
     .update({ is_online: false, is_suspended: true })
-    .in("id", driverIdsToSuspend);
+    .in("id", allDriverIdsToSuspend);
 
-  // 🚀 Batch Redis cleanup
-  await redis.zrem("drivers:locations", ...driverIdsToSuspend);
-  const keysToDelete = driverIdsToSuspend.map((id) => `driver:${id}`);
-  await redis.del(...keysToDelete);
+  // 🚀 Batch Redis cleanup for location
+  await redis.zrem(
+    "drivers:locations:motorcycle",
+    ...motorcycleDriverIdsToSuspend
+  );
+  await redis.zrem("drivers:locations:car", ...carDriverIdsToSuspend);
 
   // 📲 Push notification + WebSocket message
   const suspensionMessage = {
@@ -57,4 +69,8 @@ export async function cleanInactiveDriversWorker(
       console.log(`🧹 Suspended and cleaned up driver ${driverId}`);
     })
   );
+
+  // 🚀 Batch Redis cleanup for driver data
+  const keysToDelete = allDriverIdsToSuspend.map((id) => `driver:${id}`);
+  await redis.del(...keysToDelete);
 }

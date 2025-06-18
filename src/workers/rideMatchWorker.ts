@@ -6,7 +6,10 @@ import { sendPushNotification } from "../services/notificationService";
 import redisConfigBullMQ from "../config/redisConfig";
 
 type RideMatchJobData = {
+  type?: string;
   ride_id: string;
+  vehicle_type: string;
+  distance_to_pickup_km?: number;
   distance_m: number;
   duration_s: number;
   fare: number;
@@ -18,10 +21,10 @@ type RideMatchJobData = {
   dropoff: any;
   attemptedDrivers?: string[];
   retry_count?: number;
+  request_expired_at?: number;
 };
 
 const MAX_RETRIES = 10;
-const GEO_KEY = "drivers:locations";
 const MAX_RADIUS_KM = 10;
 const WAIT_TIME = 60; // in seconds
 const MAX_ALLOWED_REQUEST_FAILURES = 3;
@@ -38,6 +41,7 @@ export function startRideMatchWorker(
     async (job: Job<RideMatchJobData>) => {
       const {
         ride_id,
+        vehicle_type,
         distance_m,
         duration_s,
         fare,
@@ -61,8 +65,9 @@ export function startRideMatchWorker(
         }
       }
 
+      const geoKey = `drivers:locations:${vehicle_type}`;
       const geoResults = (await redis.geosearch(
-        GEO_KEY,
+        geoKey,
         "FROMLONLAT",
         pickup.coords[0],
         pickup.coords[1],
@@ -93,7 +98,7 @@ export function startRideMatchWorker(
         if (!driver) continue;
 
         if (!driver.is_online || driver.is_suspended) {
-          await redis.zrem(GEO_KEY, driverId);
+          await redis.zrem(geoKey, driverId);
           await redis.del(`driver:${driverId}`);
           continue;
         }
@@ -126,13 +131,13 @@ export function startRideMatchWorker(
             JSON.stringify(suspensionMessage)
           );
 
-          await redis.zrem(GEO_KEY, driverId);
+          await redis.zrem(geoKey, driverId);
           await redis.del(`driver:${driverId}`);
 
           continue;
         }
 
-        if (driver.availability_status === "busy") continue;
+        if (driver.availability_status !== "available") continue;
 
         const isReviewing = await redis.get(`driver:is_reviewing:${driverId}`);
         if (isReviewing === "true") continue;
@@ -197,8 +202,9 @@ export function startRideMatchWorker(
       const distanceToPickup = parseFloat(distanceToPickupStr);
       const timestamp = Date.now();
 
-      const messageData = {
+      const messageData: RideMatchJobData = {
         type: "NEW_RIDE_REQUEST",
+        vehicle_type,
         ride_id,
         distance_to_pickup_km: distanceToPickup,
         distance_m,

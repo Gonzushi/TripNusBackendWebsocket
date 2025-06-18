@@ -6,13 +6,13 @@ import { Server } from "socket.io";
 // Schema for driver data validation matching frontend types
 const driverDataSchema = z.object({
   socketId: z.string().optional(),
+  availabilityStatus: z.enum(["available", "en_route_to_pickup", "waiting_at_pickup", "en_route_to_drop_off"]).optional(),
   role: z.literal("driver").optional(),
   id: z.string().optional(),
   lat: z.number().nullable().optional(),
   lng: z.number().nullable().optional(),
   vehicle_type: z.enum(["motorcycle", "car", "unknown"]).optional(),
   vehicle_plate: z.string().optional(),
-  status: z.enum(["available", "on_trip", "offline", "waiting"]).optional(),
   update_via: z.enum(["websocket", "api", "mobile_app"]).optional(),
   last_updated_at: z.string().optional(),
   speed_kph: z.number().optional(),
@@ -48,7 +48,16 @@ export const createDriverController = (io: Server, redis: Redis) => {
         data.lat !== undefined &&
         data.lng !== undefined
       ) {
-        await redis.geoadd("drivers:locations", data.lng, data.lat, driverId);
+        if (data.availabilityStatus === "available") {
+          await redis.geoadd(
+            `drivers:locations:${data.vehicle_type}`,
+            data.lng,
+            data.lat,
+            driverId
+          );
+        } else {
+          redis.zrem(`drivers:locations:${data.vehicle_type}`, driverId);
+        }
       }
 
       // Broadcast to subscribed riders
