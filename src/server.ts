@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-/* ---------------- Core & 3rd Party Imports ---------------- */
+/* ---------------- Core & 3rd Party Imports --------------- */
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
